@@ -1,0 +1,62 @@
+#!/bin/bash
+#SBATCH --account=general
+#SBATCH --job-name=q_b50_v10
+#SBATCH --partition=general
+#SBATCH --mem=500GB
+#SBATCH --time=96:00:00        ### WallTime
+#SBATCH --nodes=1              ### Number of Nodes
+#SBATCH --ntasks-per-node=32   ### Number of tasks (MPI processes)
+#SBATCH --cpus-per-task=4     ### Number of threads per task (OMP threads)
+#SBATCH --output=%x-%j.log
+#SBATCH --error=%x-%j.log
+
+
+maxr=10
+maxz=970
+dr=0.1
+dz=0.5
+r0=0.97
+tension=0.3
+pertb=0.0
+period_or_end=0
+mui=0.91
+muo=1.0
+vf=10
+temp_profile=1
+tlow=1414
+thigh=2177
+tsolid=1414
+
+# for linear: tlow=1400, thigh=1700, twidth1=400;
+# for tanh: tlow = 1400, thigh=1850, twidth1=970;
+solidwidth=0
+
+#profile widths here:
+twidth1=533
+twidth2=50
+
+thigh_width=30
+
+restart=1
+trestart=14.0
+outputdt=0
+nghostlayer=3
+epsilon=0.3
+reinitstep=10
+
+init_thread=5
+
+outputdt=`echo "scale=4; $dr/$vf*10.0" | bc`
+
+tanh_profile=1
+startx=510
+
+module load mpich
+module load hdf5
+module load petsc
+
+export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK
+export OMP_PLACES=threads
+export OMP_PROC_BIND=spread
+
+srun -n 32 -N 1 ./stokes_test --maxr=$maxr --maxz=$maxz --dr=$dr --dz=$dz --r0=$r0 --tension=$tension --pertb=$pertb --period_or_end=$period_or_end --mui=$mui --muo=$muo --vf=$vf --temp_profile=$temp_profile --tlow=$tlow --thigh=$thigh --tsolid=$tsolid --solidwidth=$solidwidth --twidth1=$twidth1 --twidth2=$twidth2 --thigh_width=$thigh_width --restart=$restart --trestart=$trestart --outputdt=$outputdt --nghostlayer=$nghostlayer --epsilon=$epsilon --reinitstep=$reinitstep --init_thread=$init_thread --tanh_profile=$tanh_profile --startx=$startx 
